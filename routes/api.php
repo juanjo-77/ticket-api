@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\DeviceController;
 
 // Rutas públicas
 Route::post('/register', [AuthController::class, 'register']);
@@ -18,5 +19,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tickets
     Route::apiResource('tickets', TicketController::class);
     Route::post('tickets/{ticket}/assign', [TicketController::class, 'assign']);
+
+    // Devices
+    Route::apiResource('devices', DeviceController::class);
+    Route::post('devices/{device}/assign',   [DeviceController::class, 'assign']);
+    Route::post('devices/{device}/unassign', [DeviceController::class, 'unassign']);
 
 });
