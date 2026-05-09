@@ -19,16 +19,18 @@ return new class extends Migration
             $table->enum('priority', ['low', 'medium', 'high', 'critical'])->default('medium');
             $table->enum('status', ['open', 'in_progress', 'resolved', 'closed'])->default('open');
             $table->foreignId('created_by')
-                ->constrained('users')
-                ->cascadeOnDelete();
-            $table->foreignId('assigned_to')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
-            $table->foreignId('device_id')
-                ->nullable()
-                ->constrained('devices')
-                ->nullOnDelete();
+		      ->constrained('users')
+		      ->noActionOnDelete();
+
+		$table->foreignId('assigned_to')
+		      ->nullable()
+		      ->constrained('users')
+		      ->noActionOnDelete();
+
+		$table->foreignId('device_id')
+		      ->nullable()
+		      ->constrained('devices')
+		      ->noActionOnDelete();
             $table->timestamp('resolved_at')->nullable();
             $table->timestamps();
         });
