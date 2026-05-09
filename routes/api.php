@@ -5,12 +5,14 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\DeviceController;
 
-// Rutas públicas
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
+// Rutas públicas (60 requests por minuto)
+Route::middleware('throttle:60,1')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login',    [AuthController::class, 'login']);
+});
 
-// Rutas protegidas
-Route::middleware('auth:sanctum')->group(function () {
+// Rutas protegidas (30 requests por minuto)
+Route::middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
 
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
