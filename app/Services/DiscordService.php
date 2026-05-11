@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class DiscordService
 {
@@ -11,45 +10,46 @@ class DiscordService
 
     public function __construct()
     {
-        $this->webhookUrl = config('services.discord.webhook_url', '');
+        $this->webhookUrl = config('services.discord.webhook_url');
     }
 
-    public function send(string $title, string $message, string $color = '3447003'): void
+    public function sendError(string $endpoint, string $method, string $message, string $ip): void
     {
-        if (empty($this->webhookUrl)) {
-            Log::warning('Discord webhook URL no configurada');
-            return;
-        }
-
-        try {
-            Http::post($this->webhookUrl, [
-                'embeds' => [[
-                    'title'       => $title,
-                    'description' => $message,
-                    'color'       => (int) $color,
-                    'timestamp'   => now()->toIso8601String(),
-                ]]
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error enviando mensaje a Discord: ' . $e->getMessage());
-        }
+        $this->send([
+            'embeds' => [[
+                'title'       => '🚨 Error 500 detectado',
+                'color'       => 15158332, // rojo
+                'fields'      => [
+                    ['name' => 'Endpoint',  'value' => $endpoint,  'inline' => true],
+                    ['name' => 'Método',    'value' => $method,    'inline' => true],
+                    ['name' => 'IP',        'value' => $ip,        'inline' => true],
+                    ['name' => 'Error',     'value' => $message,   'inline' => false],
+                    ['name' => 'Fecha',     'value' => now()->toDateTimeString(), 'inline' => true],
+                ],
+            ]],
+        ]);
     }
 
-    public function sendRateLimitAlert(string $ip, string $route): void
+    public function sendRateLimit(string $endpoint, string $ip, int $attempts): void
     {
-        $this->send(
-            '⚠️ Rate Limit Excedido',
-            "**IP:** `{$ip}`\n**Ruta:** `{$route}`\n**Hora:** " . now()->format('Y-m-d H:i:s'),
-            '16711680'
-        );
+        $this->send([
+            'embeds' => [[
+                'title'  => '⚠️ Rate Limit excedido',
+                'color'  => 16776960, // amarillo
+                'fields' => [
+                    ['name' => 'Endpoint',  'value' => $endpoint,          'inline' => true],
+                    ['name' => 'IP',        'value' => $ip,                'inline' => true],
+                    ['name' => 'Intentos',  'value' => (string)$attempts,  'inline' => true],
+                    ['name' => 'Timestamp', 'value' => now()->toDateTimeString(), 'inline' => true],
+                ],
+            ]],
+        ]);
     }
 
-    public function sendTicketAlert(string $action, array $data): void
+    private function send(array $payload): void
     {
-        $this->send(
-            "🎫 Ticket {$action}",
-            "**Título:** {$data['title']}\n**Estado:** {$data['status']}\n**Prioridad:** {$data['priority']}",
-            '3066993'
-        );
+        if (empty($this->webhookUrl)) return;
+
+        Http::post($this->webhookUrl, $payload);
     }
 }

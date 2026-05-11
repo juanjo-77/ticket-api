@@ -4,79 +4,59 @@ namespace App\Services;
 
 use App\Models\Ticket;
 use App\Models\ActivityLog;
-use Illuminate\Support\Facades\Auth;
 
 class TicketService
 {
-    public function getAll(array $filters = [])
+    public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
-        $query = Ticket::with(['creator', 'assignee', 'device']);
-
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-        if (isset($filters['priority'])) {
-            $query->where('priority', $filters['priority']);
-        }
-        if (isset($filters['type'])) {
-            $query->where('type', $filters['type']);
-        }
-
-        return $query->orderBy('created_at', 'desc')->paginate(10);
+        return Ticket::with(['creator', 'assignee', 'device'])->get();
     }
 
-    public function create(array $data): Ticket
+    public function getById(int $id): Ticket
     {
-        $ticket = Ticket::create([
-            'title'       => $data['title'],
-            'description' => $data['description'],
-            'type'        => $data['type'],
-            'priority'    => $data['priority'] ?? 'medium',
-            'status'      => 'open',
-            'created_by'  => Auth::id(),
-            'device_id'   => $data['device_id'] ?? null,
-        ]);
+        return Ticket::with(['creator', 'assignee', 'device'])->findOrFail($id);
+    }
 
-        $this->log('ticket.created', $ticket);
+    public function create(array $data, int $userId): Ticket
+    {
+        $data['created_by'] = $userId;
+        $ticket = Ticket::create($data);
+
+        $this->log($userId, 'ticket.created', $ticket->id, $data);
 
         return $ticket;
     }
 
-    public function update(Ticket $ticket, array $data): Ticket
+    public function update(int $id, array $data, int $userId): Ticket
     {
+        $ticket = Ticket::findOrFail($id);
         $ticket->update($data);
 
         if (isset($data['status']) && $data['status'] === 'resolved') {
             $ticket->update(['resolved_at' => now()]);
         }
 
-        $this->log('ticket.updated', $ticket);
+        $this->log($userId, 'ticket.updated', $ticket->id, $data);
 
         return $ticket;
     }
 
-    public function delete(Ticket $ticket): void
+    public function delete(int $id, int $userId): void
     {
-        $this->log('ticket.deleted', $ticket);
+        $ticket = Ticket::findOrFail($id);
+        $this->log($userId, 'ticket.deleted', $ticket->id, []);
         $ticket->delete();
     }
 
-    public function assign(Ticket $ticket, int $userId): Ticket
-    {
-        $ticket->update(['assigned_to' => $userId, 'status' => 'in_progress']);
-        $this->log('ticket.assigned', $ticket);
-        return $ticket;
-    }
-
-    private function log(string $action, Ticket $ticket): void
+    private function log(int $userId, string $action, int $entityId, array $metadata): void
 {
     ActivityLog::create([
-        'user_id'     => Auth::id(),
+        'user_id'     => $userId,
         'action'      => $action,
         'entity_type' => 'Ticket',
-        'entity_id'   => $ticket->id,
+        'entity_id'   => $entityId,
+        'metadata'    => json_encode($metadata),
         'ip_address'  => request()->ip(),
-        'metadata'    => json_encode(['title' => $ticket->title, 'status' => $ticket->status]),
     ]);
 }
 }

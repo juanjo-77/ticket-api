@@ -18,7 +18,8 @@ class StoreTicketRequest extends FormRequest
             'description' => 'required|string',
             'type'        => 'required|in:incident,assignment,maintenance',
             'priority'    => 'sometimes|in:low,medium,high,critical',
-            'device_id'   => 'sometimes|nullable|exists:devices,id',
+            'device_id'   => 'sometimes|exists:devices,id',
+            'assigned_to' => 'sometimes|exists:users,id',
         ];
     }
 }

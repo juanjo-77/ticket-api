@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -24,13 +24,17 @@ class AuthController extends Controller
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
-                'message' => 'Usuario registrado exitosamente',
-                'token'   => $token,
-                'user'    => $user,
+                'success' => true,
+                'message' => 'Usuario registrado correctamente',
+                'data'    => [
+                    'user'  => $user,
+                    'token' => $token,
+                ],
             ], 201);
 
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'Error al registrar usuario',
                 'error'   => $e->getMessage(),
             ], 500);
@@ -42,22 +46,27 @@ class AuthController extends Controller
         try {
             if (!Auth::attempt($request->only('email', 'password'))) {
                 return response()->json([
+                    'success' => false,
                     'message' => 'Credenciales incorrectas',
                 ], 401);
             }
 
-            $user  = Auth::user();
+            $user  = User::where('email', $request->email)->firstOrFail();
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
+                'success' => true,
                 'message' => 'Login exitoso',
-                'token'   => $token,
-                'user'    => $user,
+                'data'    => [
+                    'user'  => $user,
+                    'token' => $token,
+                ],
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al iniciar sesión',
+                'success' => false,
+                'message' => 'Error en el login',
                 'error'   => $e->getMessage(),
             ], 500);
         }
@@ -66,22 +75,19 @@ class AuthController extends Controller
     public function logout(): JsonResponse
     {
         try {
-            Auth::user()->currentAccessToken()->delete();
+            auth()->user()->tokens()->delete();
 
             return response()->json([
-                'message' => 'Sesión cerrada exitosamente',
+                'success' => true,
+                'message' => 'Sesión cerrada correctamente',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'Error al cerrar sesión',
                 'error'   => $e->getMessage(),
             ], 500);
         }
-    }
-
-    public function me(): JsonResponse
-    {
-        return response()->json(Auth::user());
     }
 }
