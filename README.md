@@ -1,10 +1,3 @@
-Vamos a crear el README:
-
-```bash
-nano README.md
-```
-
-Borra todo y pega esto:
 
 ```markdown
 # 🎫 Ticket API
