@@ -231,3 +231,20 @@ app/
 |-------|----------|-----|
 | admin@ticketapi.com | password123 | admin |
 | tecnico@ticketapi.com | password123 | technician |
+
+
+---
+
+## 📸 Evidencias
+
+### Discord — Rate Limit excedido
+<img width="879" height="924" alt="imagen" src="https://github.com/user-attachments/assets/ebb8f228-e1dc-40aa-80d0-45776b99cf6c" />
+
+
+### Terminal — Rate Limit 429
+<img width="904" height="595" alt="imagen" src="https://github.com/user-attachments/assets/91c18f8c-52f1-4379-b271-995d1ce44db3" />
+
+
+### Sentry — Errores capturados
+<img width="1456" height="823" alt="imagen" src="https://github.com/user-attachments/assets/f02bf653-f984-481b-ad29-a728ba1ab4e8" />
+
